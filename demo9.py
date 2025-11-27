@@ -493,7 +493,7 @@ def render_intro_page():
     if c2.button("Start Experience >", type="primary", use_container_width=True):
         finish_intro()
         
-    st.markdown('<div class="intro-credits">by Mathias, Finn & Nicolas</div>', unsafe_allow_html=True)
+    st.markdown('<div class="intro-credits">by Matze, Finn & Nicolas</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # 10. UI: LANDING PAGE
@@ -780,4 +780,5 @@ def main():
             render_final_page(df)
 
 if __name__ == "__main__":
+
     main()
