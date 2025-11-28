@@ -725,7 +725,7 @@ def get_smart_recommendations(base_id, df, df_cop, n=20, selected_macros=None):
 def render_intro_page():
     st.markdown("""
     <div class="intro-container">
-        <div class="intro-title">H&M Style Guide</div>
+        <div class="intro-title">Dein Drip Detector</div>
         <div class="intro-subtitle">Discover your perfect look.</div>
     </div>
     """, unsafe_allow_html=True)
@@ -1202,5 +1202,6 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
 
