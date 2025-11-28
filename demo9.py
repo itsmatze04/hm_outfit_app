@@ -31,30 +31,31 @@ st.markdown(f"""
         flex-direction: column;
         align-items: center;
         justify-content: center;
-        /* Vertikale Zentrierung ohne Scrollen */
-        min-height: 80vh; 
+        /* etwas weniger Höhe, damit alles auf einen Blick passt */
+        min-height: 70vh; 
         text-align: center;
     }}
     
     .intro-title {{
-        /* Rundere, moderne Schrift */
         font-family: "Arial Rounded MT Bold", "Helvetica Rounded", Arial, sans-serif;
-        font-size: 90px;
-        font-weight: 900; /* Extra Fett */
+        /* kleiner, damit Titel + Button + Credits in den Viewport passen */
+        font-size: 72px;
+        font-weight: 900;
         letter-spacing: -3px;
         color: #ffffff;
         margin-bottom: 0px;
         line-height: 1.0;
-        text-shadow: 0px 0px 20px rgba(0, 64, 128, 0.5); /* Leichter Glow in Marineblau */
+        text-shadow: 0px 0px 20px rgba(0, 64, 128, 0.5);
     }}
     
     .intro-subtitle {{
         font-family: "Source Sans Pro", sans-serif;
         font-size: 22px;
         font-weight: 300;
-        color: #a0c0e0; /* Leichtes Blau-Grau */
+        color: #a0c0e0;
         margin-top: 15px;
-        margin-bottom: 40px;
+        /* weniger Abstand nach unten */
+        margin-bottom: 24px;
     }}
     
     /* Credits ganz klein */
@@ -62,7 +63,8 @@ st.markdown(f"""
         font-family: monospace;
         font-size: 10px;
         color: #444;
-        margin-top: 60px;
+        /* Credits näher an den Button holen */
+        margin-top: 16px;
     }}
 
     /* --- BUTTONS (MARINEBLAU) --- */
@@ -733,7 +735,7 @@ def render_intro_page():
     if c2.button("Start Experience >", type="primary", use_container_width=True):
         finish_intro()
         
-    st.markdown('<div class="intro-credits">by Matze, Finn & Nicolas</div>', unsafe_allow_html=True)
+    st.markdown('<div class="intro-credits">by matze, finn & nicolas</div>', unsafe_allow_html=True)
 
 # ---------------------------------------------------------
 # 10. UI: LANDING PAGE
@@ -982,7 +984,7 @@ def render_landing_page(df):
     if visible < len(pool_ids):
         more_cols = st.columns([1, 1, 4])
         with more_cols[0]:
-            if st.button("Mehr anzeigen", key="btn_load_more"):
+            if st.button("Refresh", key="btn_load_more"):
                 # z. B. jeweils 24 zusätzliche Artikel laden
                 st.session_state.base_visible = min(
                     visible + 24,
@@ -1106,46 +1108,71 @@ def render_final_page(df):
     scroll_to_top()
     st.balloons()
     st.toast("Outfit erfolgreich gespeichert!", icon="✅")
-    
+
     if st.button("⬅️ Zurück zum Bearbeiten"):
         st.session_state["view"] = "outfit"
         st.rerun()
-        
-    st.title("Dein fertiger Look:")
-    
-    base_id = st.session_state["base_article_id"]
-    base_row = get_base_article_row(df, base_id)
-    final_ids = st.session_state["final_selection"]
-    
+
+    st.title("Dein komplettes Outfit ✨")
+
+    base_id = st.session_state.get("base_article_id")
+    base_row = get_base_article_row(df, base_id) if base_id is not None else None
+    final_ids = st.session_state.get("final_selection", {})
+
+    # gewünschte Reihenfolge im Summary
+    summary_order = ["ACCESSORY", "OUTERWEAR", "TOP", "BOTTOM", "SHOES"]
+
     c1, c2, c3 = st.columns([1, 2, 1])
     with c2:
-        st.markdown("### Dein Basisteil")
-        if base_id == 999999:
-             st.info("📸 Dein Foto")
-             if st.session_state.get("uploaded_image_object"):
-                 st.image(st.session_state["uploaded_image_object"], use_container_width=True)
-        else:
-            st.image(get_image_url(base_row["article_id_str"]), use_container_width=True)
-        
-        st.markdown(f"**{base_row['prod_name']}**")
-        st.markdown("---")
-        
-        st.markdown("### Dazu hast du gewählt:")
-        for macro in MACRO_DISPLAY_ORDER:
-            if macro in final_ids:
+        st.markdown("#### Ausgewählte Teile")
+
+        base_macro = None
+        if base_row is not None:
+            base_macro = base_row.get("macro_category", None)
+
+        for macro in summary_order:
+            art_id = None
+            is_base = False
+
+            # 1) Basisteil in die Liste integrieren
+            if macro == base_macro and base_id is not None:
+                art_id = base_id
+                is_base = True
+            # 2) Sonst ggf. gewähltes Teil aus final_selection
+            elif macro in final_ids:
                 art_id = final_ids[macro]
-                row = get_base_article_row(df, art_id)
-                if row is not None:
-                    st.caption(MACRO_LABEL_DE.get(macro, macro))
-                    st.image(get_image_url(row["article_id_str"]), use_container_width=True)
+
+            if art_id is None:
+                continue
+
+            row = get_base_article_row(df, art_id)
+            if row is None:
+                continue
+
+            with st.container():
+                col_img, col_txt = st.columns([1, 1.6])
+                with col_img:
+                    # eigenes Foto für Basisteil 999999 anzeigen
+                    if is_base and art_id == 999999 and st.session_state.get("uploaded_image_object"):
+                        st.image(st.session_state["uploaded_image_object"], use_container_width=True)
+                    else:
+                        st.image(get_image_url(row["article_id_str"]), use_container_width=True)
+
+                with col_txt:
+                    label = MACRO_LABEL_DE.get(macro, macro)
+                    if is_base:
+                        label = f"{label} – dein Basisteil"
+                    st.caption(label)
                     st.markdown(f"**{row['prod_name']}**")
-                    st.markdown("---")
-    
-    if st.button("Neues Outfit starten", type="primary", use_container_width=True):
-        st.session_state["view"] = "select"
-        st.session_state["uploaded_base_item"] = None
-        st.session_state["base_article_id"] = None
-        st.rerun()
+
+            st.markdown("---")
+
+        if st.button("Neues Outfit starten", type="primary", use_container_width=True):
+            st.session_state["view"] = "select"
+            st.session_state["uploaded_base_item"] = None
+            st.session_state["base_article_id"] = None
+            st.rerun()
+
 
 # ---------------------------------------------------------
 # 13. MAIN ROUTING
@@ -1175,3 +1202,4 @@ def main():
 if __name__ == "__main__":
 
     main()
+
