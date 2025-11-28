@@ -13,7 +13,7 @@ from collections import Counter
 # 1. KONFIGURATION & CSS
 # ---------------------------------------------------------
 st.set_page_config(
-    page_title="H&M Style Guide",
+    page_title="3,2,1 Drip",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
@@ -1202,4 +1202,5 @@ def main():
 if __name__ == "__main__":
 
     main()
+
 
